@@ -398,6 +398,8 @@ Copyright (C) 1998-2010 by James S. Seymour, Release 1.1.5
 use strict;
 use locale;
 use Getopt::Long;
+eval { require Geo::IP };
+my $hasGeoIP = $@ ? 0 : 1;
 eval { require Date::Calc };
 my $hasDateCalc = $@ ? 0 : 1;
 
@@ -412,7 +414,7 @@ use vars qw(
     $divByOneKAt $divByOneMegAt $oneK $oneMeg
     @monthNames %monthNums $thisYr $thisMon
     $msgCntI $msgSizeI $msgDfrsI $msgDlyAvgI $msgDlyMaxI
-    $isoDateTime
+    $isoDateTime $gi $gi6
 );
 
 # Some constants used by display routines.  I arbitrarily chose to
@@ -616,6 +618,11 @@ End_Of_HELP_DATE_CALC
 
 ($dateStr, $dateStrRFC3339) = get_datestrs($opts{'d'}) if(defined($opts{'d'}));
 
+if ($hasGeoIP) {
+    $gi = Geo::IP->open('/usr/share/GeoIP/GeoIP.dat') or die "No GeoIP.dat file";
+    $gi6 = Geo::IP->open('/usr/share/GeoIP/GeoIPv6.dat') or die "No GeoIPv6.dat file";
+}
+
 # debugging
 #open(UNPROCD, "> unprocessed") ||
 #    die "couldn't open \"unprocessed\": $!\n";
@@ -752,7 +759,7 @@ while(<>) {
 	    } elsif($logRmdr =~ /: disconnect from /) {
 		my ($pid, $hostID) = $logRmdr =~ /\/smtpd\[(\d+)\]: disconnect from (.+)$/;
 		if(exists($connTime{$pid})) {
-		    $hostID = gimme_domain($hostID);
+		    $hostID = gimme_domain($hostID, 1);
 		    my($d, $h, $m, $s) = Delta_DHMS(@{$connTime{$pid}},
 			$msgYr, $msgMon + 1, $msgDay, $msgHr, $msgMin, $msgSec);
 		    delete($connTime{$pid});	# dispose of no-longer-needed item
@@ -1275,24 +1282,40 @@ sub print_domain_smtpd_summary {
     return if($cnt == 0);
     my $topCnt = $cnt > 0? "(top $cnt)" : "";
     my $avgDly;
+    my $cntry;
 
     print_subsect_title("Host/Domain Summary: SMTPD Connections $topCnt");
 
     print <<End_Of_Domain_Smtp_Heading;
- connections  time conn.  avg./conn.  max. time  host/domain
- -----------  ----------  ----------  ---------  -----------
+ connections  time conn.  avg./conn.  max. time  host/domain              country
+ -----------  ----------  ----------  ---------  -----------              -------
 End_Of_Domain_Smtp_Heading
 
     foreach (reverse sort by_count_then_size keys(%$hashRef)) {
 	my $avg = (${$hashRef->{$_}}[1]/${$hashRef->{$_}}[0]) + .5;
 	my ($sec, $min, $hr) = get_smh(${$hashRef->{$_}}[1]);
 
-	printf "  %6d%s      %2d:%02d:%02d     %6ds    %6ds   %s\n",
+	if ($hasGeoIP) {
+	    if ($_ =~ /:/) {
+		$cntry = $gi6->country_name_by_addr_v6( $_ );
+	    }
+	    elsif ($_ =~ /^\d/) {
+		$cntry = $gi->country_name_by_addr( $_ );
+	    }
+	    else {
+		$cntry = $gi->country_name_by_name( $_ );
+	    }
+	}
+	if (!defined $cntry) {
+	    $cntry = 'Unknown';
+	}
+	printf "  %6d%s      %2d:%02d:%02d     %6ds    %6ds   %-24s %s\n",
 	    adj_int_units(${$hashRef->{$_}}[0]),
 	    $hr, $min, $sec,
 	    $avg,
 	    ${$hashRef->{$_}}[2],
-	    $_;
+	    $_,
+	    $cntry;
 	last if --$cnt == 0;
     }
 }
@@ -1530,6 +1553,7 @@ sub get_datestrs {
 # Does nothing interesting with IPv6 addresses.
 # FIXME: I think the IPv6 address parsing may be weak
 sub gimme_domain {
+    my $force = $_[1];
     $_ = $_[0];
     my($domain, $ipAddr);
  
@@ -1543,7 +1567,7 @@ sub gimme_domain {
     }
  
     # "mach.host.dom"/"mach.host.do.co" to "host.dom"/"host.do.co"
-    if($domain eq 'unknown') {
+    if($force || ($domain eq 'unknown')) {
         $domain = $ipAddr;
 	# For identifying the host part on a Class C network (commonly
 	# seen with dial-ups) the following is handy.
