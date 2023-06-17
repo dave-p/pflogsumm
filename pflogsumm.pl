@@ -420,8 +420,8 @@ use vars qw(
 # Some constants used by display routines.  I arbitrarily chose to
 # display in kilobytes and megabytes at the 512k and 512m boundaries,
 # respectively.  Season to taste.
-$divByOneKAt   = 524288;	# 512k
-$divByOneMegAt = 536870912;	# 512m
+$divByOneKAt   = 1024;		# 1k
+$divByOneMegAt = 10485760;	# 10m
 $oneK          = 1024;		# 1k
 $oneMeg        = 1048576;	# 1m
 
