@@ -13,7 +13,7 @@ Copyright (C) 1998-2010 by James S. Seymour, Release 1.1.5
     pflogsumm.pl -[eq] [-d <today|yesterday>] [--detail <cnt>]
 	[--bounce-detail <cnt>] [--deferral-detail <cnt>]
 	[-h <cnt>] [-i|--ignore-case] [--iso-date-time] [--mailq]
-	[-m|--uucp-mung] [--no-no-msg-size] [--problems-first]
+	[--no-no-msg-size] [--problems-first]
 	[--rej-add-from] [--reject-detail <cnt>] [--smtp-detail <cnt>]
 	[--smtpd-stats] [--smtpd-warning-detail <cnt>]
 	[--syslog-name=string] [-u <cnt>] [--verbose-msg-detail]
@@ -92,21 +92,6 @@ Copyright (C) 1998-2010 by James S. Seymour, Release 1.1.5
                    For summaries that contain date or time information,
 		   use ISO 8601 standard formats (CCYY-MM-DD and HH:MM),
 		   rather than "Mon DD CCYY" and "HHMM".
-
-    -m             modify (mung?) UUCP-style bang-paths
-    --uucp-mung
-
-                   This is for use when you have a mix of Internet-style
-                   domain addresses and UUCP-style bang-paths in the log.
-                   Upstream UUCP feeds sometimes mung Internet domain
-                   style address into bang-paths.  This option can
-                   sometimes undo the "damage".  For example:
-                   "somehost.dom!username@foo" (where "foo" is the next
-                   host upstream and "somehost.dom" was whence the email
-                   originated) will get converted to
-                   "foo!username@somehost.dom".  This also affects the
-                   extended detail report (-e), to help ensure that by-
-                    domain-by-name sorting is more accurate.
 
     --mailq        Run "mailq" command at end of report.
     
@@ -320,12 +305,6 @@ Copyright (C) 1998-2010 by James S. Seymour, Release 1.1.5
     of this option may result in inaccurate statistics with regards
     to the "senders" count.
 
-    UUCP-style bang-path handling needs more work.  Particularly if
-    Postfix is not being run with "swap_bangpath = yes" and/or *is* being
-    run with "append_dot_mydomain = yes", the detailed by-message report
-    may not be sorted correctly by-domain-by-user.  (Also depends on
-    upstream MTA, I suspect.)
-
     The "percent rejected" and "percent discarded" figures are only
     approximations.  They are calculated as follows (example is for
     "percent rejected"):
@@ -494,7 +473,7 @@ $usageMsg =
     "usage: $progName -[eq] [-d <today|yesterday>] [--detail <cnt>]
 	[--bounce-detail <cnt>] [--deferral-detail <cnt>]
 	[-h <cnt>] [-i|--ignore-case] [--iso-date-time] [--mailq]
-	[-m|--uucp-mung] [--no-no-msg-size] [--problems-first]
+	[--no-no-msg-size] [--problems-first]
 	[--rej-add-from] [--reject-detail <cnt>] [--smtp-detail <cnt>]
 	[--smtpd-stats] [--smtpd-warning-detail <cnt>]
 	[--syslog-name=string] [-u <cnt>] [--verbose-msg-detail]
@@ -522,7 +501,6 @@ GetOptions(
     "i"                        => \$opts{'i'},
     "iso-date-time"            => \$isoDateTime,
     "mailq"                    => \$opts{'mailq'},
-    "m"                        => \$opts{'m'},
     "no-bounce-detail"         => \$opts{'noBounceDetail'},
     "no-deferral-detail"       => \$opts{'noDeferralDetail'},
     "no-no-msg-size"           => \$opts{'noNoMsgSize'},
@@ -537,7 +515,6 @@ GetOptions(
     "smtpd-warning-detail=i"   => \$opts{'smtpdWarnDetail'},
     "syslog-name=s"            => \$opts{'syslogName'},
     "u=i"                      => \$opts{'u'},
-    "uucp-mung"                => \$opts{'m'},
     "verbose-msg-detail"       => \$opts{'verbMsgDetail'},
     "verp-mung:i"              => \$opts{'verpMung'},
     "version"                  => \$opts{'version'},
@@ -796,9 +773,6 @@ while(<>) {
 	{
 	    next if($msgSizes{$qid});	# avoid double-counting!
 	    if($addr) {
-		if($opts{'m'} && $addr =~ /^(.*!)*([^!]+)!([^!@]+)@([^\.]+)$/) {
-		    $addr = "$4!" . ($1? "$1" : "") . $3 . "\@$2";
-		}
 		$addr =~ s/(@.+)/\L$1/ unless($opts{'i'});
 		$addr = lc($addr) if($opts{'i'});
 		$addr = verp_mung($addr);
@@ -830,9 +804,6 @@ while(<>) {
 		/to=<([^>]*)>, (?:orig_to=<[^>]*>, )?relay=([^,]+), (?:conn_use=[^,]+, )?delay=([^,]+), (?:delays=[^,]+, )?(?:dsn=[^,]+, )?status=(\S+)(.*)$/) >= 4)
 	{
 
-	    if($opts{'m'} && $addr =~ /^(.*!)*([^!]+)!([^!@]+)@([^\.]+)$/) {
-		$addr = "$4!" . ($1? "$1" : "") . $3 . "\@$2";
-	    }
 	    $addr =~ s/(@.+)/\L$1/ unless($opts{'i'});
 	    $addr = lc($addr) if($opts{'i'});
 	    $relay = lc($relay) if($opts{'i'});
@@ -1459,20 +1430,10 @@ sub normalize_host {
 }
 
 # subroutine to sort by domain, then user in domain, then by queue i.d.
-# Note: mixing Internet-style domain names and UUCP-style bang-paths
-# may confuse this thing.  An attempt is made to use the first host
-# preceding the username in the bang-path as the "domain" if none is
-# found otherwise.
 sub by_domain_then_user {
     # first see if we can get "user@somedomain"
     my($userNameA, $domainA) = split(/\@/, ${$hashRef->{$a}}[0]);
     my($userNameB, $domainB) = split(/\@/, ${$hashRef->{$b}}[0]);
-
-    # try "somedomain!user"?
-    ($userNameA, $domainA) = (split(/!/, ${$hashRef->{$a}}[0]))[-1,-2]
-	unless($domainA);
-    ($userNameB, $domainB) = (split(/!/, ${$hashRef->{$b}}[0]))[-1,-2]
-	unless($domainB);
 
     # now re-order "mach.host.dom"/"mach.host.do.co" to
     # "host.dom.mach"/"host.do.co.mach"
@@ -1491,9 +1452,6 @@ sub by_domain_then_user {
     } elsif($domainA gt $domainB) {
 	return 1;
     } else {
-	# disregard leading bang-path
-	$userNameA =~ s/^.*!//;
-	$userNameB =~ s/^.*!//;
 	if($userNameA lt $userNameB) {
 	    return -1;
 	} elsif($userNameA gt $userNameB) {
