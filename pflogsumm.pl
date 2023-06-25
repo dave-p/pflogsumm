@@ -923,17 +923,17 @@ if(defined($dateStr)) {
 
 print_subsect_title("Grand Totals");
 print "messages\n\n";
-printf " %6d%s  received\n", adj_int_units($msgsRcvd);
-printf " %6d%s  delivered\n", adj_int_units($msgsDlvrd);
-printf " %6d%s  forwarded\n", adj_int_units($msgsFwdd);
-printf " %6d%s  deferred", adj_int_units($msgsDfrd);
-printf "  (%d%s deferrals)", adj_int_units($msgsDfrdCnt) if($msgsDfrdCnt);
+printf " %6d  received\n", $msgsRcvd;
+printf " %6d  delivered\n", $msgsDlvrd;
+printf " %6d  forwarded\n", $msgsFwdd;
+printf " %6d  deferred", $msgsDfrd;
+printf "  (%d deferrals)", $msgsDfrdCnt if($msgsDfrdCnt);
 print "\n";
-printf " %6d%s  bounced\n", adj_int_units($msgsBncd);
-printf " %6d%s  rejected (%d%%)\n", adj_int_units($msgsRjctd), $msgsRjctdPct;
-printf " %6d%s  reject warnings\n", adj_int_units($msgsWrnd);
-printf " %6d%s  held\n", adj_int_units($msgsHld);
-printf " %6d%s  discarded (%d%%)\n", adj_int_units($msgsDscrdd), $msgsDscrddPct;
+printf " %6d  bounced\n", $msgsBncd;
+printf " %6d  rejected (%d%%)\n", $msgsRjctd, $msgsRjctdPct;
+printf " %6d  reject warnings\n", $msgsWrnd;
+printf " %6d  held\n", $msgsHld;
+printf " %6d  discarded (%d%%)\n", $msgsDscrdd, $msgsDscrddPct;
 print "\n";
 printf " %6d%s  bytes received\n", adj_int_units($sizeRcvd);
 printf " %6d%s  bytes delivered\n", adj_int_units($sizeDlvrd);
