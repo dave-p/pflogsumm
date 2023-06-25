@@ -450,8 +450,8 @@ my (
 );
 $dayCnt = $smtpdConnCnt = $smtpdTotTime = 0;
 
-# Init total messages delivered, rejected, and discarded
-$msgsDlvrd = $msgsRjctd = $msgsDscrdd = 0;
+# Init total messages counts
+$msgsDlvrd = $msgsRjctd = $msgsDscrdd = $msgsFwdd = $msgsHld = $msgsWrnd = 0;
 
 # Init messages received and delivered per hour
 my @rcvPerHr = (0) x 24;
