@@ -282,13 +282,9 @@ Copyright (C) 1998-2010 by James S. Seymour, Release 1.1.5
     needed.
 
     For display purposes: integer values are munged into "kilo" and
-    "mega" notation as they exceed certain values.  I chose the
-    admittedly arbitrary boundaries of 512k and 512m as the points at
-    which to do this--my thinking being 512x was the largest number
-    (of digits) that most folks can comfortably grok at-a-glance.
-    These are "computer" "k" and "m", not 1000 and 1,000,000.  You
-    can easily change all of this with some constants near the
-    beginning of the program.
+    "mega" notation as they exceed certain values.  You can easily
+    change all of this with some constants near the beginning of the
+    program.
 
     "Items-per-day" reports are not generated for single-day
     reports.  For multiple-day reports: "Items-per-hour" numbers are
@@ -348,9 +344,12 @@ Copyright (C) 1998-2010 by James S. Seymour, Release 1.1.5
     Date::Calc module, which can be obtained from CPAN at
     http://www.perl.com.
 
-    Pflogsumm is currently written and tested under Perl 5.8.3.
-    As of version 19990413-02, pflogsumm worked with Perl 5.003, but
-    future compatibility is not guaranteed.
+    To add geolocation to the smtp connection reports, install the
+    (deprecated) Maxmind Geo::IP module from
+    https://github.com/maxmind/geoip-api-perl and legacy geoip databases
+    from https://mailfud.org/geoip-legacy/
+
+    Pflogsumm is currently written and tested under Perl 5.36.
 
 =head1 LICENSE
 
@@ -383,7 +382,7 @@ eval { require Date::Calc };
 my $hasDateCalc = $@ ? 0 : 1;
 
 my $mailqCmd = "mailq";
-my $release = "1.1.5";
+my $release = "1.1.5a";
 
 # Variables and constants used throughout pflogsumm
 use vars qw(
@@ -396,9 +395,7 @@ use vars qw(
     $isoDateTime $gi $gi6
 );
 
-# Some constants used by display routines.  I arbitrarily chose to
-# display in kilobytes and megabytes at the 512k and 512m boundaries,
-# respectively.  Season to taste.
+# Some constants used by display routines. Season to taste.
 $divByOneKAt   = 1024;		# 1k
 $divByOneMegAt = 10485760;	# 10m
 $oneK          = 1024;		# 1k
