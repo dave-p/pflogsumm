@@ -397,9 +397,9 @@ use vars qw(
 
 # Some constants used by display routines. Season to taste.
 $divByOneKAt   = 1024;		# 1k
-$divByOneMegAt = 10485760;	# 10m
+$divByOneMegAt = 10485760;	# 10M
 $oneK          = 1024;		# 1k
-$oneMeg        = 1048576;	# 1m
+$oneMeg        = 1048576;	# 1M
 
 # Constants used throughout pflogsumm
 @monthNames = qw(Jan Feb Mar Apr May Jun Jul Aug Sep Oct Nov Dec);
@@ -1542,7 +1542,7 @@ sub adj_int_units {
     $value = 0 unless($value);
     if($value > $divByOneMegAt) {
 	$value /= $oneMeg;
-	$units = 'm'
+	$units = 'M'
     } elsif($value > $divByOneKAt) {
 	$value /= $oneK;
 	$units = 'k'
