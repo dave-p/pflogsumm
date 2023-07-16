@@ -99,24 +99,6 @@ Copyright (C) 1998-2010 by James S. Seymour, Release 1.1.5
 		   is in $PATH.  See "$mailqCmd" variable to path thisi
 		   if desired.)
 
-    --no_bounce_detail
-    --no_deferral_detail
-    --no_reject_detail
-
-		   These switches are deprecated in favour of
-		   --bounce-detail, --deferral-detail and
-		   --reject-detail, respectively.
-
-                   Suppresses the printing of the following detailed
-                   reports, respectively:
-
-			message bounce detail (by relay)
-			message deferral detail
-			message reject detail
-
-                   See also: "-u" and "-h" for further report-limiting
-                             options.
-
     --no-no-msg-size
 
 		    Do not emit report on "Messages with no size data".
@@ -129,15 +111,6 @@ Copyright (C) 1998-2010 by James S. Seymour, Release 1.1.5
 		    size" and the total for "bytes delivered." These are
 		    normally reported by pflogsumm as "Messages with no
 		    size data."
-
-    --no-smtpd-warnings
-
-		   This switch is deprecated in favour of
-		   smtpd-warning-detail
-
-		    On a busy mail server, say at an ISP, SMTPD warnings
-		    can result in a rather sizeable report.  This option
-		    turns reporting them off.
 
     --problems-first
 
